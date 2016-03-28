@@ -5,6 +5,7 @@ import org.januslabs.oauth2.jwt.base.OAuthUserService;
 import org.januslabs.oauth2.jwt.mongo.repository.JWTMongoTokenStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -50,14 +51,13 @@ public class OAuth2Application {
     }
 
     @Override
-    @Bean(name="authenticationManagerBean")
-    public AuthenticationManager authenticationManagerBean() throws Exception 
-    {
-        return super.authenticationManagerBean();
+    @Bean(name = "authenticationManagerBean")
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+      return super.authenticationManagerBean();
     }
 
   }
-  
+
   @Configuration
   @EnableAuthorizationServer
   @Slf4j
@@ -65,6 +65,12 @@ public class OAuth2Application {
     @Autowired
     @Qualifier("authenticationManagerBean")
     private AuthenticationManager authenticationManager;
+
+    @Value("${config.oauth2.alias}")
+    private String alias;
+
+    @Value("${config.oauth2.keypass}")
+    private String keypass;
 
 
     @Override
@@ -96,13 +102,10 @@ public class OAuth2Application {
 
     @Bean
     protected JwtAccessTokenConverter jwtTokenEnhancer() {
-      KeyStoreKeyFactory keyStoreKeyFactory =
-          new KeyStoreKeyFactory(new ClassPathResource("oauth2-authorization-server.jks"), "royals".toCharArray());
+      KeyStoreKeyFactory keyStoreKeyFactory = new KeyStoreKeyFactory(
+          new ClassPathResource("oauth2-authorization-server.jks"), keypass.toCharArray());
       JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-      /*
-       * converter.setSigningKey(privateKey); converter.setVerifierKey(publicKey);
-       */
-      converter.setKeyPair(keyStoreKeyFactory.getKeyPair("januslabskey"));
+      converter.setKeyPair(keyStoreKeyFactory.getKeyPair(alias));
       return converter;
     }
 
